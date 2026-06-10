@@ -1,0 +1,193 @@
+MONGODB REPLICA SET SETUP
+
+1. Create Directories
+
+C:\data\db0
+C:\data\db1
+C:\data\db2
+
+2. Start MongoDB Instances
+
+mongod --port 27017 --dbpath C:\data\db0 --replSet myReplSet
+
+mongod --port 27018 --dbpath C:\data\db1 --replSet myReplSet
+
+mongod --port 27019 --dbpath C:\data\db2 --replSet myReplSet
+
+3. Connect
+
+mongosh --port 27017
+
+4. Initialize Replica Set
+
+rs.initiate({
+  _id: "myReplSet",
+  members: [
+    { _id: 0, host: "localhost:27017" },
+    { _id: 1, host: "localhost:27018" },
+    { _id: 2, host: "localhost:27019" }
+  ]
+})
+
+5. Verify
+
+rs.conf()
+
+rs.status()
+
+db.hello()
+
+6. Add Member (Optional)
+
+rs.add("localhost:27020")
+
+7. Create Database and Insert Data
+
+use company
+
+db.employee.insertOne({
+  empid: 101,
+  name: "Aaditya",
+  department: "CSE",
+  salary: 60000
+})
+
+8. Display Data
+
+db.employee.find().pretty()
+
+9. Connect to Secondary
+
+mongosh --port 27018
+
+rs.secondaryOk()
+
+use company
+
+db.employee.find().pretty()
+
+10. Final Verification
+
+rs.status()
+
+rs.conf()
+
+db.hello()
+
+db.employee.find().pretty()
+
+Output:
+
+{
+  "set": "myReplSet",
+  "members": [
+    {
+      "_id": 0,
+      "name": "localhost:27017",
+      "stateStr": "PRIMARY"
+    },
+    {
+      "_id": 1,
+      "name": "localhost:27018",
+      "stateStr": "SECONDARY"
+    },
+    {
+      "_id": 2,
+      "name": "localhost:27019",
+      "stateStr": "SECONDARY"
+    }
+  ]
+}
+
+Result:
+Replica set created successfully with one PRIMARY and two SECONDARY nodes. Data inserted into PRIMARY is replicated to SECONDARY nodes.
+
+
+
+
+mkdir C:\data1\config
+mkdir C:\data1\db
+mkdir C:\data1\log
+
+mkdir C:\data2\config
+mkdir C:\data2\db
+mkdir C:\data2\log
+
+
+mongod --dbpath "C:\Program Files\MongoDB\Server\4.4\data\db" --logpath "C:\Program Files\MongoDB\Server\4.4\log\mongod.log" --port 27017 --storageEngine wiredTiger --journal --replSet prodrep
+
+mongo --port 27017
+
+rsconf={
+   _id:"prodrep",
+   members:[
+      {_id:0,host:"localhost:27017"}
+   ]
+}
+
+rs.initiate(rsconf)
+
+show dbs
+
+
+mongod --dbpath "C:\data1\db" --logpath "C:\data1\log\mongod.log" --port 27020 --storageEngine wiredTiger --journal --replSet prodrep
+
+
+mongod --dbpath "C:\data2\db" --logpath "C:\data2\log\mongod.log" --port 27030 --storageEngine wiredTiger --journal --replSet prodrep
+
+
+rs.add("localhost:27020")
+
+rs.add("localhost:27030")
+
+rs.status()
+
+
+mongo --port 27020
+
+rs.slaveOk()
+
+show dbs
+
+
+mongo --port 27030
+
+rs.slaveOk()
+
+show dbs
+
+
+use repdb1
+
+db.student.insertOne({
+   name:"Avi"
+})
+
+show dbs
+
+db.student.find()
+
+
+mongo --port 27020
+
+rs.slaveOk()
+
+use repdb1
+
+db.student.find()
+
+
+mongo --port 27030
+
+rs.slaveOk()
+
+use repdb1
+
+db.student.find()
+
+
+rs.conf()
+
+rs.status()
+
+db.hello()

@@ -1,0 +1,109 @@
+// Create Database
+use CoffeeDB
+
+// Insert Documents
+db.sales.insertMany([
+    { "_id": 1, "item": "Americanos", "price": 5, "size": "Short", "quantity": 22, "date": ISODate("2022-01-15T08:00:00Z") },
+    { "_id": 2, "item": "Cappuccino", "price": 6, "size": "Short", "quantity": 12, "date": ISODate("2022-01-16T09:00:00Z") },
+    { "_id": 3, "item": "Lattes", "price": 15, "size": "Grande", "quantity": 25, "date": ISODate("2022-01-16T09:05:00Z") },
+    { "_id": 4, "item": "Mochas", "price": 25, "size": "Tall", "quantity": 11, "date": ISODate("2022-02-17T08:00:00Z") },
+    { "_id": 5, "item": "Americanos", "price": 10, "size": "Grande", "quantity": 12, "date": ISODate("2022-02-18T21:06:00Z") },
+    { "_id": 6, "item": "Cappuccino", "price": 7, "size": "Tall", "quantity": 20, "date": ISODate("2022-02-20T10:07:00Z") },
+    { "_id": 7, "item": "Lattes", "price": 25, "size": "Tall", "quantity": 30, "date": ISODate("2022-02-21T10:08:00Z") },
+    { "_id": 8, "item": "Americanos", "price": 10, "size": "Grande", "quantity": 21, "date": ISODate("2022-02-22T14:09:00Z") },
+    { "_id": 9, "item": "Cappuccino", "price": 10, "size": "Grande", "quantity": 17, "date": ISODate("2022-02-23T14:09:00Z") },
+    { "_id": 10, "item": "Americanos", "price": 8, "size": "Tall", "quantity": 15, "date": ISODate("2022-02-25T14:09:00Z") }
+]);
+
+// Display Documents
+db.sales.find().pretty();
+
+// Show Existing Indexes
+db.sales.getIndexes();
+
+// Query Before Index
+db.sales.find({
+    item: "Americanos"
+}).explain("executionStats");
+
+// Create Single Field Index
+db.sales.createIndex({ item: 1 });
+
+// Verify Index Creation
+db.sales.getIndexes();
+
+// Query After Index
+db.sales.find({
+    item: "Americanos"
+}).explain("executionStats");
+
+// Create Compound Index
+db.sales.createIndex({
+    item: 1,
+    price: -1
+});
+
+// Show All Indexes
+db.sales.getIndexes();
+
+// Create Unique Index Example
+db.sales.createIndex(
+    { date: 1 },
+    { unique: true }
+);
+
+// Drop Single Index
+db.sales.dropIndex("item_1");
+
+// Show Remaining Indexes
+db.sales.getIndexes();
+
+// Drop All Non-_id Indexes
+db.sales.dropIndexes();
+
+// Final Index List
+db.sales.getIndexes();
+
+
+// Create Single Index on item field
+db.sales.createIndex({ item: 1 });
+
+// View Indexes
+db.sales.getIndexes();
+
+
+// Create Compound Index on item and price
+db.sales.createIndex({
+    item: 1,
+    price: -1
+});
+
+// View Indexes
+db.sales.getIndexes();
+
+// Create Unique Index on date field
+db.sales.createIndex(
+    { date: 1 },
+    { unique: true }
+);
+
+// View Indexes
+db.sales.getIndexes();
+
+
+db.sales.find({
+    item: "Americanos"
+}).explain("executionStats");
+
+
+winningPlan: {
+    stage: "IXSCAN"
+}
+
+db.sales.getIndexes();
+
+
+// Drop item index
+db.sales.dropIndex("item_1");
+
+db.sales.dropIndexes();

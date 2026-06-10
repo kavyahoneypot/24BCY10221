@@ -1,0 +1,548 @@
+MongoDB Aggregation										
+										
+1)Dataset Creation										
+										
+db.sales.insertMany([	"{ ""_id"" : 1, ""item"" : ""Americanos"", ""price"" : 5, ""size"": ""Short"", ""quantity"" : 22, ""date"" : ISODate(""2022-01-15T08:00:00Z"") },"	"{ ""_id"" : 2, ""item"" : ""Cappuccino"", ""price"" : 6, ""size"": ""Short"",""quantity"" : 12, ""date"" : ISODate(""2022-01-16T09:00:00Z"") },"	"{ ""_id"" : 3, ""item"" : ""Lattes"", ""price"" : 15, ""size"": ""Grande"",""quantity"" : 25, ""date"" : ISODate(""2022-01-16T09:05:00Z"") },"	"{ ""_id"" : 4, ""item"" : ""Mochas"", ""price"" : 25,""size"": ""Tall"", ""quantity"" : 11, ""date"" : ISODate(""2022-02-17T08:00:00Z"") },"	"{ ""_id"" : 5, ""item"" : ""Americanos"", ""price"" : 10, ""size"": ""Grande"",""quantity"" : 12, ""date"" : ISODate(""2022-02-18T21:06:00Z"") },"	"{ ""_id"" : 6, ""item"" : ""Cappuccino"", ""price"" : 7, ""size"": ""Tall"",""quantity"" : 20, ""date"" : ISODate(""2022-02-20T10:07:00Z"") },"	"{ ""_id"" : 7, ""item"" : ""Lattes"", ""price"" : 25,""size"": ""Tall"", ""quantity"" : 30, ""date"" : ISODate(""2022-02-21T10:08:00Z"") },"	"{ ""_id"" : 8, ""item"" : ""Americanos"", ""price"" : 10, ""size"": ""Grande"",""quantity"" : 21, ""date"" : ISODate(""2022-02-22T14:09:00Z"") },"	"{ ""_id"" : 9, ""item"" : ""Cappuccino"", ""price"" : 10, ""size"": ""Grande"",""quantity"" : 17, ""date"" : ISODate(""2022-02-23T14:09:00Z"") },"	"{ ""_id"" : 10, ""item"" : ""Americanos"", ""price"" : 8, ""size"": ""Tall"",""quantity"" : 15, ""date"" : ISODate(""2022-02-25T14:09:00Z"")}"
+										
+]);										
+										
+{										
+  acknowledged: true,										
+  insertedIds: {										
+    '0': 1,										
+    '1': 2,										
+    '2': 3,										
+    '3': 4,										
+    '4': 5,										
+    '5': 6,										
+    '6': 7,										
+    '7': 8,										
+    '8': 9,										
+    '9': 10										
+  }										
+}										
+										
+2)Aggregation using $group and $sum										
+										
+db.sales.aggregate([										
+   {										
+      $group: {										
+"         _id: ""$item"","										
+"         totalQuantity: { $sum: ""$quantity"" }"										
+      }										
+   }										
+])										
+										
+{										
+  _id: 'Cappuccino',										
+  totalQuantity: 49										
+}										
+{										
+  _id: 'Americanos',										
+  totalQuantity: 70										
+}										
+{										
+  _id: 'Lattes',										
+  totalQuantity: 55										
+}										
+{										
+  _id: 'Mochas',										
+  totalQuantity: 11										
+}										
+										
+3)Aggregation using $avg										
+										
+db.sales.aggregate([										
+   {										
+      $group: {										
+"         _id: ""$item"","										
+"         averagePrice: { $avg: ""$price"" }"										
+      }										
+   }										
+])										
+										
+{										
+  _id: 'Mochas',										
+  averagePrice: 25										
+}										
+{										
+  _id: 'Lattes',										
+  averagePrice: 20										
+}										
+{										
+  _id: 'Americanos',										
+  averagePrice: 8.25										
+}										
+{										
+  _id: 'Cappuccino',										
+  averagePrice: 7.666666666666667										
+}										
+										
+4)Aggregation using $sum and $multiply										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+"      _id: ""$item"","										
+      totalSales: {										
+         $sum: {										
+"            $multiply: [""$price"", ""$quantity""]"										
+         }										
+      }										
+   }										
+}										
+])										
+										
+{										
+  _id: 'Mochas',										
+  totalSales: 275										
+}										
+{										
+  _id: 'Lattes',										
+  totalSales: 1125										
+}										
+{										
+  _id: 'Americanos',										
+  totalSales: 560										
+}										
+{										
+  _id: 'Cappuccino',										
+  totalSales: 382										
+}										
+										
+5)Average Price × 10 with Ascending Sort										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+"      _id: ""$item"","										
+"      avgPrice: { $avg: ""$price"" }"										
+   }										
+},										
+{										
+   $project: {										
+      multipliedValue: {										
+"         $multiply: [""$avgPrice"", 10]"										
+      }										
+   }										
+},										
+{										
+   $sort: {										
+      multipliedValue: 1										
+   }										
+}										
+])										
+										
+{										
+  _id: 'Cappuccino',										
+  multipliedValue: 76.66666666666667										
+}										
+{										
+  _id: 'Americanos',										
+  multipliedValue: 82.5										
+}										
+{										
+  _id: 'Lattes',										
+  multipliedValue: 200										
+}										
+{										
+  _id: 'Mochas',										
+  multipliedValue: 250										
+}										
+										
+6)Average Amount using $avg and $multiply										
+										
+db.sales.aggregate([										
+  {										
+    $group: {										
+      _id: '$item',										
+      averageAmount: { $avg: { $multiply: ['$quantity', '$price'] } },										
+    },										
+  },										
+  { $sort: { averageAmount: 1 } },										
+])										
+										
+{										
+  _id: 'Cappuccino',										
+  averageAmount: 127.33333333333333										
+}										
+{										
+  _id: 'Americanos',										
+  averageAmount: 140										
+}										
+{										
+  _id: 'Mochas',										
+  averageAmount: 275										
+}										
+{										
+  _id: 'Lattes',										
+  averageAmount: 562.5										
+}										
+										
+MongoDB $count										
+										
+db.sales.drop()										
+true										
+										
+db.sales.insertMany([	"{ ""_id"" : 1, ""item"" : ""Americanos"", ""price"" : 5, ""size"": ""Short"", ""quantity"" : 22, ""date"" : ISODate(""2022-01-15T08:00:00Z"") },"	"{ ""_id"" : 2, ""item"" : ""Cappuccino"", ""price"" : 6, ""size"": ""Short"", ""quantity"" : 12, ""date"" : ISODate(""2022-01-16T09:00:00Z"") },"	"{ ""_id"" : 3, ""item"" : ""Lattes"", ""price"" : 15, ""size"": ""Grande"", ""quantity"" : 25, ""date"" : ISODate(""2022-01-16T09:05:00Z"") },"	"{ ""_id"" : 4, ""item"" : ""Mochas"", ""price"" : 25, ""size"": ""Tall"", ""quantity"" : 11, ""date"" : ISODate(""2022-02-17T08:00:00Z"") },"	"{ ""_id"" : 5, ""item"" : ""Americanos"", ""price"" : 10, ""size"": ""Grande"", ""quantity"" : 12, ""date"" : ISODate(""2022-02-18T21:06:00Z"") },"	"{ ""_id"" : 6, ""item"" : ""Cappuccino"", ""price"" : 7, ""size"": ""Tall"", ""quantity"" : 20, ""date"" : ISODate(""2022-02-20T10:07:00Z"") },"	"{ ""_id"" : 7, ""item"" : ""Lattes"", ""price"" : 25, ""size"": ""Tall"", ""quantity"" : 30, ""date"" : ISODate(""2022-02-21T10:08:00Z"") },"	"{ ""_id"" : 8, ""item"" : ""Americanos"", ""price"" : 10, ""size"": ""Grande"", ""quantity"" : 21, ""date"" : ISODate(""2022-02-22T14:09:00Z"") },"	"{ ""_id"" : 9, ""item"" : ""Cappuccino"", ""price"" : 10, ""size"": ""Grande"", ""quantity"" : 17, ""date"" : ISODate(""2022-02-23T14:09:00Z"") },"	"{ ""_id"" : 10, ""item"" : ""Americanos"", ""price"" : 8, ""size"": ""Tall"", ""quantity"" : 15, ""date"" : ISODate(""2022-02-25T14:09:00Z"") }"
+										
+]);										
+										
+{										
+  acknowledged: true,										
+  insertedIds: {										
+    '0': 1,										
+    '1': 2,										
+    '2': 3,										
+    '3': 4,										
+    '4': 5,										
+    '5': 6,										
+    '6': 7,										
+    '7': 8,										
+    '8': 9,										
+    '9': 10										
+  }										
+}										
+										
+7)Count Documents Per Item										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+"      _id: ""$item"","										
+      itemCount: { $count: {} }										
+   }										
+}										
+])										
+										
+{										
+  _id: 'Lattes',										
+  itemCount: 2										
+}										
+{										
+  _id: 'Americanos',										
+  itemCount: 4										
+}										
+{										
+  _id: 'Cappuccino',										
+  itemCount: 3										
+}										
+{										
+  _id: 'Mochas',										
+  itemCount: 1										
+}										
+										
+8)Count with $match										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+"      _id: ""$item"","										
+      itemCount: { $count: {} }										
+   }										
+},										
+{										
+   $match: {										
+      itemCount: { $gt: 2 }										
+   }										
+}										
+])										
+										
+{										
+  _id: 'Cappuccino',										
+  itemCount: 3										
+}										
+{										
+  _id: 'Americanos',										
+  itemCount: 4										
+}										
+										
+MongoDB $sum										
+										
+db.sales.drop()										
+true										
+										
+db.sales.insertMany([	"{ ""_id"" : 1, ""item"" : ""Americanos"", ""price"" : 5, ""size"": ""Short"", ""quantity"" : 22, ""date"" : ISODate(""2022-01-15T08:00:00Z"") },"	"{ ""_id"" : 2, ""item"" : ""Cappuccino"", ""price"" : 6, ""size"": ""Short"", ""quantity"" : 12, ""date"" : ISODate(""2022-01-16T09:00:00Z"") },"	"{ ""_id"" : 3, ""item"" : ""Lattes"", ""price"" : 15, ""size"": ""Grande"", ""quantity"" : 25, ""date"" : ISODate(""2022-01-16T09:05:00Z"") },"	"{ ""_id"" : 4, ""item"" : ""Mochas"", ""price"" : 25, ""size"": ""Tall"", ""quantity"" : 11, ""date"" : ISODate(""2022-02-17T08:00:00Z"") },"	"{ ""_id"" : 5, ""item"" : ""Americanos"", ""price"" : 10, ""size"": ""Grande"", ""quantity"" : 12, ""date"" : ISODate(""2022-02-18T21:06:00Z"") },"	"{ ""_id"" : 6, ""item"" : ""Cappuccino"", ""price"" : 7, ""size"": ""Tall"", ""quantity"" : 20, ""date"" : ISODate(""2022-02-20T10:07:00Z"") },"	"{ ""_id"" : 7, ""item"" : ""Lattes"", ""price"" : 25, ""size"": ""Tall"", ""quantity"" : 30, ""date"" : ISODate(""2022-02-21T10:08:00Z"") },"	"{ ""_id"" : 8, ""item"" : ""Americanos"", ""price"" : 10, ""size"": ""Grande"", ""quantity"" : 21, ""date"" : ISODate(""2022-02-22T14:09:00Z"") },"	"{ ""_id"" : 9, ""item"" : ""Cappuccino"", ""price"" : 10, ""size"": ""Grande"", ""quantity"" : 17, ""date"" : ISODate(""2022-02-23T14:09:00Z"") },"	"{ ""_id"" : 10, ""item"" : ""Americanos"", ""price"" : 8, ""size"": ""Tall"", ""quantity"" : 15, ""date"" : ISODate(""2022-02-25T14:09:00Z"") }"
+										
+]);										
+										
+{										
+  acknowledged: true,										
+  insertedIds: {										
+    '0': 1,										
+    '1': 2,										
+    '2': 3,										
+    '3': 4,										
+    '4': 5,										
+    '5': 6,										
+    '6': 7,										
+    '7': 8,										
+    '8': 9,										
+    '9': 10										
+  }										
+}										
+										
+9)Total Quantity										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+      _id: null,										
+"      totalQty: { $sum: ""$quantity"" }"										
+   }										
+}										
+])										
+										
+{										
+  _id: null,										
+  totalQty: 185										
+}										
+										
+10)Total Quantity by Item										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+      _id: null,										
+"      totalQty: { $sum: ""$quantity"" }"										
+   }										
+},										
+{										
+   $project: {										
+      _id: 0										
+   }										
+}										
+])										
+										
+{										
+  totalQty: 185										
+}										
+										
+11)Total Quantity with Sorting										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+"      _id: ""$item"","										
+"      totalQty: { $sum: ""$quantity"" }"										
+   }										
+}										
+])										
+										
+{										
+  _id: 'Mochas',										
+  totalQty: 11										
+}										
+{										
+  _id: 'Cappuccino',										
+  totalQty: 49										
+}										
+{										
+  _id: 'Americanos',										
+  totalQty: 70										
+}										
+{										
+  _id: 'Lattes',										
+  totalQty: 55										
+}										
+										
+12)Total Quantity with Match										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+"      _id: ""$item"","										
+"      totalQty: { $sum: ""$quantity"" }"										
+   }										
+},										
+{										
+   $sort: {										
+      totalQty: -1										
+   }										
+}										
+])										
+										
+{										
+  _id: 'Americanos',										
+  totalQty: 70										
+}										
+{										
+  _id: 'Lattes',										
+  totalQty: 55										
+}										
+{										
+  _id: 'Cappuccino',										
+  totalQty: 49										
+}										
+{										
+  _id: 'Mochas',										
+  totalQty: 11										
+}										
+										
+13)Total Amount by Size										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+"      _id: ""$item"","										
+"      totalQty: { $sum: ""$quantity"" }"										
+   }										
+},										
+{										
+   $match: {										
+      totalQty: { $gt: 50 }										
+   }										
+},										
+{										
+   $sort: {										
+      totalQty: -1										
+   }										
+}										
+])										
+										
+{										
+  _id: 'Americanos',										
+  totalQty: 70										
+}										
+{										
+  _id: 'Lattes',										
+  totalQty: 55										
+}										
+										
+14)Total Amount by Size										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+"      _id: ""$size"","										
+      totalAmount: {										
+         $sum: {										
+"            $multiply: [""$price"", ""$quantity""]"										
+         }										
+      }										
+   }										
+},										
+{										
+   $sort: {										
+      totalAmount: -1										
+   }										
+}										
+])										
+										
+{										
+  _id: 'Tall',										
+  totalAmount: 1285										
+}										
+{										
+  _id: 'Grande',										
+  totalAmount: 875										
+}										
+{										
+  _id: 'Short',										
+  totalAmount: 182										
+}										
+										
+MongoDB $max										
+										
+db.sales.drop()										
+true										
+										
+db.sales.insertMany([	"{ ""_id"" : 1, ""item"" : ""Americanos"", ""price"" : 5, ""size"": ""Short"", ""quantity"" : 22, ""date"" : ISODate(""2022-01-15T08:00:00Z"") },"	"{ ""_id"" : 2, ""item"" : ""Cappuccino"", ""price"" : 6, ""size"": ""Short"", ""quantity"" : 12, ""date"" : ISODate(""2022-01-16T09:00:00Z"") },"	"{ ""_id"" : 3, ""item"" : ""Lattes"", ""price"" : 15, ""size"": ""Grande"", ""quantity"" : 25, ""date"" : ISODate(""2022-01-16T09:05:00Z"") },"	"{ ""_id"" : 4, ""item"" : ""Mochas"", ""price"" : 25, ""size"": ""Tall"", ""quantity"" : 11, ""date"" : ISODate(""2022-02-17T08:00:00Z"") },"	"{ ""_id"" : 5, ""item"" : ""Americanos"", ""price"" : 10, ""size"": ""Grande"", ""quantity"" : 12, ""date"" : ISODate(""2022-02-18T21:06:00Z"") },"	"{ ""_id"" : 6, ""item"" : ""Cappuccino"", ""price"" : 7, ""size"": ""Tall"", ""quantity"" : 20, ""date"" : ISODate(""2022-02-20T10:07:00Z"") },"	"{ ""_id"" : 7, ""item"" : ""Lattes"", ""price"" : 25, ""size"": ""Tall"", ""quantity"" : 30, ""date"" : ISODate(""2022-02-21T10:08:00Z"") },"	"{ ""_id"" : 8, ""item"" : ""Americanos"", ""price"" : 10, ""size"": ""Grande"", ""quantity"" : 21, ""date"" : ISODate(""2022-02-22T14:09:00Z"") },"	"{ ""_id"" : 9, ""item"" : ""Cappuccino"", ""price"" : 10, ""size"": ""Grande"", ""quantity"" : 17, ""date"" : ISODate(""2022-02-23T14:09:00Z"") },"	"{ ""_id"" : 10, ""item"" : ""Americanos"", ""price"" : 8, ""size"": ""Tall"", ""quantity"" : 15, ""date"" : ISODate(""2022-02-25T14:09:00Z"") }"
+										
+]);										
+										
+{										
+  acknowledged: true,										
+  insertedIds: {										
+    '0': 1,										
+    '1': 2,										
+    '2': 3,										
+    '3': 4,										
+    '4': 5,										
+    '5': 6,										
+    '6': 7,										
+    '7': 8,										
+    '8': 9,										
+    '9': 10										
+  }										
+}										
+										
+15)Maximum Quantity										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+      _id: null,										
+"      maxQty: { $max: ""$quantity"" }"										
+   }										
+},										
+{										
+   $project: {										
+      _id: 0										
+   }										
+}										
+])										
+										
+{										
+  maxQty: 30										
+}										
+										
+16)Maximum Quantity Per Item										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+"      _id: ""$item"","										
+"      maxQty: { $max: ""$quantity"" }"										
+   }										
+}										
+])										
+										
+{										
+  _id: 'Mochas',										
+  maxQty: 11										
+}										
+{										
+  _id: 'Cappuccino',										
+  maxQty: 20										
+}										
+{										
+  _id: 'Americanos',										
+  maxQty: 22										
+}										
+{										
+  _id: 'Lattes',										
+  maxQty: 30										
+}										
+										
+17)Maximum Sales Amount										
+										
+db.sales.aggregate([										
+{										
+   $group: {										
+"      _id: ""$item"","										
+      maxQty: {										
+         $max: {										
+"            $multiply: [""$quantity"", ""$price""]"										
+         }										
+      }										
+   }										
+}										
+])										
+										
+{										
+  _id: 'Mochas',										
+  maxQty: 275										
+}										
+{										
+  _id: 'Lattes',										
+  maxQty: 750										
+}										
+{										
+  _id: 'Americanos',										
+  maxQty: 210										
+}										
+{										
+  _id: 'Cappuccino',										
+  maxQty: 170										
+}							
